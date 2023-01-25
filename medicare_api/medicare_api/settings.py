@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-um0fm&qioe4e8nm=u@1r@+e2of^*@-e**86ge0txf*b(_!)ref'
+SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = str(os.environ.get('DEBUG')) == "1"  # True
 
+ENV_ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS') or None
 ALLOWED_HOSTS = []
+if ENV_ALLOWED_HOSTS is not None:
+    ALLOWED_HOSTS = [ENV_ALLOWED_HOSTS]
 
 
 # Application definition
@@ -37,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Auth'
 ]
 
 MIDDLEWARE = [
@@ -73,12 +78,32 @@ WSGI_APPLICATION = 'medicare_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+
+# DB Config
+DB_NAME = os.environ.get('DB_NAME')
+DB_USER = os.environ.get('DB_USER')
+DB_PASSWORD = str(os.environ.get('DB_PASSWORD'))
+DB_HOST = os.environ.get('DB_HOST')
+DB_PORT = os.environ.get('DB_PORT')
+
+MYSQL_READY = (
+    DB_NAME is not None
+    and DB_USER is not None
+    and DB_HOST is not None
+    and DB_PASSWORD is not None
+)
+
+if MYSQL_READY:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': DB_NAME,
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        }
     }
-}
 
 
 # Password validation
